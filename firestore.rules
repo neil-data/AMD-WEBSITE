@@ -9,16 +9,16 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
-    function hasRole(role) {
-      return signedIn() && request.auth.token.role == role;
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student');
     }
 
     function isRecruiterOrAdmin() {
-      return hasRole('recruiter') || hasRole('admin');
+      return signedIn() && (myRole() == 'recruiter' || myRole() == 'admin');
     }
 
     function isAdmin() {
-      return hasRole('admin');
+      return signedIn() && myRole() == 'admin';
     }
 
     match /users/{userId} {
