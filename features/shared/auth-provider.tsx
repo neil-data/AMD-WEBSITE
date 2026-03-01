@@ -45,17 +45,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Use cached role for optimistic UI only — do NOT stop loading yet.
       const cachedRole = typeof window !== "undefined" ? window.localStorage.getItem("skillrank:user-role") : null;
       if (cachedRole === "student" || cachedRole === "recruiter" || cachedRole === "admin") {
         setRole(cachedRole);
       }
-      setLoading(false);
 
+      // Always fetch the authoritative role from Firestore before releasing the
+      // loading gate so the DashboardGuard never redirects based on a stale cache.
       const nextRole = await fetchUserRole(nextUser.uid);
       setRole(nextRole);
       if (typeof window !== "undefined") {
         window.localStorage.setItem("skillrank:user-role", nextRole);
       }
+      setLoading(false);
     });
 
     return unsubscribe;

@@ -26,6 +26,8 @@ export function DashboardGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    console.log("[DashboardGuard] resolved → user:", user?.email, "| role:", role, "| path:", pathname);
+
     if (!user) {
       router.replace("/auth?mode=login");
       return;
@@ -37,6 +39,7 @@ export function DashboardGuard({ children }: { children: React.ReactNode }) {
     }
 
     if (routeRole !== role) {
+      console.log(`[DashboardGuard] role mismatch (url="${routeRole}" vs actual="${role}") → redirecting`);
       router.replace(dashboardPathForRole(role));
     }
   }, [loading, pathname, role, router, user]);
