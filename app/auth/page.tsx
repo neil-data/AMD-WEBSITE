@@ -73,15 +73,25 @@ export default function AuthPage() {
     const userRef = doc(db, "users", uid);
     const userSnapshot = await getDoc(userRef);
     const existingRole = userSnapshot.data()?.role;
-    const targetRole: UserRole = existingRole === "recruiter" || existingRole === "admin" ? existingRole : fallbackRole;
 
-    if (!userSnapshot.exists()) {
-      await setDoc(
-        userRef,
-        {
-          displayName: name,
-          email: emailAddress,
-          role: targetRole,
+    // Admins keep their role. Everyone else gets the role they selected
+    // on the auth page (fallbackRole). This ensures a recruiter who logs
+    // in via the Recruiter tab always gets recruiter — even if their
+    // Firestore doc was previously written with a different role.
+    const targetRole: UserRole = existingRole === "admin" ? "admin" : fallbackRole;
+
+    // Always write so the Firestore doc is in sync with the selected role.
+    // On a fresh page load (after window.location.href) fetchUserRole will
+    // read the correct role, preventing the guard from redirecting to the
+    // wrong dashboard.
+    await setDoc(
+      userRef,
+      {
+        displayName: name || userSnapshot.data()?.displayName || "",
+        email: emailAddress,
+        role: targetRole,
+        updatedAt: serverTimestamp(),
+        ...(!userSnapshot.exists() && {
           skillRankScore: 1000,
           integrityScore: 90,
           contributionScore: 0,
@@ -90,12 +100,11 @@ export default function AuthPage() {
           badges: [],
           completedChallenges: [],
           exchangeHistory: [],
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        },
-        { merge: true }
-      );
-    }
+          createdAt: serverTimestamp()
+        })
+      },
+      { merge: true }
+    );
 
     return targetRole;
   };
