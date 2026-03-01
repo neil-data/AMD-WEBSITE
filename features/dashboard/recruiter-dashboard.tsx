@@ -81,14 +81,14 @@ export function RecruiterDashboard({ section }: { section?: string }) {
       initial="hidden"
       animate="show"
       variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } } }}
-      className="space-y-6 p-6"
+      className="space-y-4 p-4 md:space-y-6 md:p-6"
     >
       <SectionTitle
         title="Recruiter Dashboard"
         subtitle="Search and verify candidates with SkillRank, integrity, AI-risk signals, trend analytics, and trust-backed performance evidence."
       />
 
-      <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="grid gap-3 md:grid-cols-5">
+      <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="grid gap-3 grid-cols-2 md:grid-cols-5">
         <Card className="p-4">
           <p className="text-[11px] text-text-secondary">Candidate Pool</p>
           <p className="mt-1 font-display text-2xl font-semibold tracking-tightest"><CountUp value={candidateRecords.length} /></p>
@@ -265,7 +265,7 @@ export function RecruiterDashboard({ section }: { section?: string }) {
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.16, delay: index * 0.03 }}
-                  className="grid gap-1 rounded-xl border border-border bg-bg/40 p-3 text-xs text-text-secondary md:grid-cols-3"
+                  className="grid grid-cols-1 gap-1 rounded-xl border border-border bg-bg/40 p-3 text-xs text-text-secondary sm:grid-cols-2 md:grid-cols-3"
                 >
                   <p>User ID: {log.userId}</p>
                   <p>Challenge ID: {log.challengeId}</p>

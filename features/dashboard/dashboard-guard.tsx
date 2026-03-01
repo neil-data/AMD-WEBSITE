@@ -44,11 +44,14 @@ export function DashboardGuard({ children }: { children: React.ReactNode }) {
     }
   }, [loading, pathname, role, router, user]);
 
-  if ((loading && !user) || !user) {
+  // Block rendering until both auth state AND Firestore role are resolved.
+  // This prevents a flash of the wrong dashboard when a stale localStorage
+  // role differs from the authoritative Firestore role.
+  if (loading || !user) {
     return (
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         <div className="h-8 w-48 skeleton rounded-xl" />
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
           <div className="h-24 skeleton rounded-xl" />
           <div className="h-24 skeleton rounded-xl" />
           <div className="h-24 skeleton rounded-xl" />

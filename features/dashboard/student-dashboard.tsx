@@ -299,14 +299,14 @@ export function StudentDashboard({ section }: { section?: string }) {
       initial="hidden"
       animate="show"
       variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } } }}
-      className="space-y-6 p-6"
+      className="space-y-4 p-4 md:space-y-6 md:p-6"
     >
       <SectionTitle
         title="Student Dashboard"
         subtitle="Performance-verified coding challenges with mandatory reasoning, AI misuse detection, and integrity-linked growth."
       />
 
-      <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="grid gap-3 md:grid-cols-6">
+      <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         <Card className="p-4">
           <p className="text-[11px] text-text-secondary">SkillRank Score</p>
           <p className="mt-1 font-display text-2xl font-semibold tracking-tightest"><CountUp value={skillRankScore} /></p>
