@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function hasRole(role) {
+      return signedIn() && request.auth.token.role == role;
+    }
+
+    function isRecruiterOrAdmin() {
+      return hasRole('recruiter') || hasRole('admin');
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isRecruiterOrAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if false;
+    }
+
+    match /challenges/{challengeId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /submissions/{submissionId} {
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isRecruiterOrAdmin());
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.challengeId is string
+        && request.resource.data.code is string
+        && request.resource.data.explanation is string
+        && request.resource.data.conceptualReasoning is string;
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /scores/{userId} {
+      allow read: if isOwner(userId) || isRecruiterOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /leaderboard/{entryId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /skillExchanges/{exchangeId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn()
+        && (resource.data.teacherId == request.auth.uid || resource.data.learnerId == request.auth.uid || isAdmin());
+      allow delete: if false;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /recruiters/{recruiterId} {
+      allow read: if isRecruiterOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /logs/{logId} {
+      allow read: if isRecruiterOrAdmin();
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /analytics/{docId} {
+      allow read: if isRecruiterOrAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}

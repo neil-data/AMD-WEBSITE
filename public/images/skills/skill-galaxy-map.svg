@@ -1,0 +1,31 @@
+<svg width="1200" height="680" viewBox="0 0 1200 680" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="680" rx="32" fill="#0D0D0F"/>
+  <rect x="28" y="28" width="1144" height="624" rx="24" stroke="#2D2D33"/>
+  <g stroke="#8F8F98" stroke-opacity="0.65" stroke-width="2">
+    <path d="M236 206L414 184"/>
+    <path d="M414 184L602 250"/>
+    <path d="M602 250L796 236"/>
+    <path d="M414 184L536 390"/>
+    <path d="M236 206L536 390"/>
+    <path d="M536 390L796 236"/>
+    <path d="M536 390L898 430"/>
+    <path d="M796 236L898 430"/>
+    <path d="M602 250L898 430"/>
+  </g>
+  <g fill="#F6F6F8">
+    <circle cx="236" cy="206" r="18"/>
+    <circle cx="414" cy="184" r="18"/>
+    <circle cx="602" cy="250" r="18"/>
+    <circle cx="796" cy="236" r="18"/>
+    <circle cx="536" cy="390" r="18"/>
+    <circle cx="898" cy="430" r="18"/>
+  </g>
+  <g fill="#B7B7C0" font-family="Inter, sans-serif" font-size="24" font-weight="600">
+    <text x="188" y="260">JavaScript</text>
+    <text x="366" y="138">React</text>
+    <text x="544" y="306">TypeScript</text>
+    <text x="754" y="192">Node</text>
+    <text x="490" y="448">System Design</text>
+    <text x="860" y="486">AI</text>
+  </g>
+</svg>
