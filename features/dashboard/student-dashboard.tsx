@@ -32,6 +32,19 @@ type ActivityItem = {
   createdAt: string;
 };
 
+type SubmissionHistoryItem = {
+  id: string;
+  challengeId: string;
+  challengeTitle: string;
+  runtime: string;
+  memory: string;
+  testCasesPassed: number;
+  totalTestCases: number;
+  finalSkillScore: number;
+  aiProbability: number;
+  createdAt: string;
+};
+
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
   loading: () => <div className="h-full w-full skeleton" />
@@ -75,6 +88,7 @@ export function StudentDashboard({ section }: { section?: string }) {
     { id: "a-3", message: "Integrity maintained above 90 for 14 days", createdAt: "08:40" }
   ]);
   const [exchangeItems, setExchangeItems] = useState<SkillExchangeItem[]>(skillExchanges);
+  const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistoryItem[]>([]);
 
   const [leaderboardSearch, setLeaderboardSearch] = useState("");
   const [leaderboardSkillFilter, setLeaderboardSkillFilter] = useState("all");
@@ -85,6 +99,7 @@ export function StudentDashboard({ section }: { section?: string }) {
     () => challengeBank.find((challenge) => challenge.id === selectedChallengeId) ?? challengeBank[0],
     [selectedChallengeId]
   );
+  const latestSubmission = submissionHistory[0] ?? null;
 
   const draftStorageKey = `skillrank:draft:${selectedChallenge.id}:${language}`;
 
@@ -100,6 +115,34 @@ export function StudentDashboard({ section }: { section?: string }) {
 
     window.localStorage.setItem(draftStorageKey, code);
   }, [code, draftStorageKey]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const raw = window.localStorage.getItem("skillrank:submission-history");
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as SubmissionHistoryItem[];
+      if (Array.isArray(parsed)) {
+        setSubmissionHistory(parsed);
+      }
+    } catch {
+      setSubmissionHistory([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem("skillrank:submission-history", JSON.stringify(submissionHistory));
+  }, [submissionHistory]);
 
   const solvedCount = useMemo(() => Object.values(completedChallenges).filter(Boolean).length, [completedChallenges]);
   const percentile = useMemo(() => Math.min(99, Math.max(65, Math.round(skillRankScore / 14.8))), [skillRankScore]);
@@ -144,6 +187,21 @@ export function StudentDashboard({ section }: { section?: string }) {
       const data = (await response.json()) as EvaluationResult;
       setEvaluationResult(data);
       setCompletedChallenges((previous) => ({ ...previous, [selectedChallenge.id]: data.testCasesPassed >= data.totalTestCases - 2 }));
+      setSubmissionHistory((previous) => [
+        {
+          id: `${Date.now()}-${selectedChallenge.id}`,
+          challengeId: selectedChallenge.id,
+          challengeTitle: selectedChallenge.title,
+          runtime: data.runtime,
+          memory: data.memory,
+          testCasesPassed: data.testCasesPassed,
+          totalTestCases: data.totalTestCases,
+          finalSkillScore: data.finalSkillScore,
+          aiProbability: data.aiProbability,
+          createdAt: new Date().toISOString()
+        },
+        ...previous
+      ].slice(0, 20));
 
       setSkillRankScore((previous) => previous + Math.max(6, Math.round(data.finalSkillScore / 6)));
       setIntegrityScore((previous) => Math.max(0, Math.min(100, previous + data.integrityImpact)));
@@ -160,7 +218,7 @@ export function StudentDashboard({ section }: { section?: string }) {
         push("Submission verified successfully", "success");
       }
 
-      addActivity(`Submitted ${selectedChallenge.title} (${data.testCasesPassed}/${data.totalTestCases})`);
+      addActivity(`Submitted ${selectedChallenge.title} (${data.testCasesPassed}/${data.totalTestCases}) • ${data.runtime} • Score ${data.finalSkillScore}`);
     } catch {
       push("Network issue while submitting challenge", "error");
     } finally {
@@ -274,6 +332,21 @@ export function StudentDashboard({ section }: { section?: string }) {
           <p className="mt-1 font-display text-2xl font-semibold tracking-tightest">{aiRiskLevel}</p>
         </Card>
       </motion.div>
+
+      {latestSubmission ? (
+        <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}>
+          <Card className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-text-secondary">Latest submission</p>
+              <p className="text-xs text-text-secondary">{new Date(latestSubmission.createdAt).toLocaleString()}</p>
+            </div>
+            <p className="mt-2 text-sm text-text-primary">{latestSubmission.challengeTitle}</p>
+            <p className="mt-1 text-xs text-text-secondary">
+              Runtime {latestSubmission.runtime} • Memory {latestSubmission.memory} • Passed {latestSubmission.testCasesPassed}/{latestSubmission.totalTestCases} • Final Score {latestSubmission.finalSkillScore}
+            </p>
+          </Card>
+        </motion.div>
+      ) : null}
 
       {(activeSection === "overview" || activeSection === "challenges") ? (
         <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -407,7 +480,17 @@ export function StudentDashboard({ section }: { section?: string }) {
               {evaluationResult ? (
                 <div className="rounded-xl border border-border bg-bg/40 p-3 text-xs text-text-secondary">
                   <p className="mb-2 text-text-primary">Submission Result</p>
-                  <pre className="overflow-auto whitespace-pre-wrap">{JSON.stringify(evaluationResult, null, 2)}</pre>
+                  <div className="space-y-1">
+                    <p>Result: {evaluationResult.testCasesPassed}/{evaluationResult.totalTestCases} test cases passed</p>
+                    <p>Runtime: {evaluationResult.runtime}</p>
+                    <p>Memory: {evaluationResult.memory}</p>
+                    <p>Code Score: {evaluationResult.codeScore}</p>
+                    <p>Explanation Score: {evaluationResult.explanationScore}</p>
+                    <p>Conceptual Score: {evaluationResult.conceptualScore}</p>
+                    <p>AI Probability: {evaluationResult.aiProbability}</p>
+                    <p>Integrity Impact: {evaluationResult.integrityImpact}</p>
+                    <p>Final Skill Score: {evaluationResult.finalSkillScore}</p>
+                  </div>
                   {evaluationResult.aiProbability > aiThreshold ? (
                     <p className="mt-2 text-text-primary">Warning: AI probability is above threshold and integrity impact has been applied.</p>
                   ) : null}
@@ -434,6 +517,34 @@ export function StudentDashboard({ section }: { section?: string }) {
                 >
                   <p className="text-sm text-text-primary">{item.message}</p>
                   <p className="mt-1 text-[11px] text-text-secondary">{item.createdAt}</p>
+                </motion.div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      ) : null}
+
+      {(activeSection === "overview" || activeSection === "challenges") && submissionHistory.length > 0 ? (
+        <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}>
+          <Card>
+            <h3 className="font-display text-2xl font-semibold tracking-tightest">Submission History</h3>
+            <p className="mt-1 text-xs text-text-secondary">Each submit stores runtime, pass result, memory, and final score in your dashboard.</p>
+            <div className="mt-4 space-y-2">
+              {submissionHistory.slice(0, 8).map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.15, delay: index * 0.03 }}
+                  className="rounded-xl border border-border bg-bg/40 p-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm text-text-primary">{item.challengeTitle}</p>
+                    <p className="text-[11px] text-text-secondary">{new Date(item.createdAt).toLocaleString()}</p>
+                  </div>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    Passed {item.testCasesPassed}/{item.totalTestCases} • Runtime {item.runtime} • Memory {item.memory} • Final Score {item.finalSkillScore} • AI {item.aiProbability}
+                  </p>
                 </motion.div>
               ))}
             </div>
