@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { ToastViewport } from "@/components/ui/toast";
@@ -23,6 +23,12 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "SkillRank AI",
   description: "Performance-Verified, Integrity-Protected Skill Exchange Ecosystem"
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

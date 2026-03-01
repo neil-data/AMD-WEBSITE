@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
@@ -46,7 +46,6 @@ function dashboardPathByRole(role: UserRole) {
 }
 
 export default function AuthPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { push } = useToast();
 
@@ -143,7 +142,7 @@ export default function AuthPage() {
         );
 
         push("Account created successfully", "success");
-        router.push(roleMeta[role].dashboard);
+        window.location.href = roleMeta[role].dashboard;
         return;
       }
 
@@ -156,7 +155,9 @@ export default function AuthPage() {
       });
 
       push("Logged in successfully", "success");
-      router.push(dashboardPathByRole(targetRole));
+      // Use hard navigation to bust Next.js router cache so the correct
+      // role dashboard is always loaded fresh, not a stale cached page.
+      window.location.href = dashboardPathByRole(targetRole);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Authentication failed";
       push(message, "error");
@@ -180,7 +181,7 @@ export default function AuthPage() {
       });
 
       push("Google sign-in successful", "success");
-      router.push(dashboardPathByRole(targetRole));
+      window.location.href = dashboardPathByRole(targetRole);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Google login failed";
       push(message, "error");
