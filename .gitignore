@@ -5,3 +5,5 @@ out
 .env.*.local
 coverage
 functions/lib
+build-output.log
+tsconfig.tsbuildinfo
